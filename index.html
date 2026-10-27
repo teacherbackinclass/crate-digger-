@@ -1,0 +1,1538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E0E26">
+<title>Crate Digger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one phone-width column. Rainbow-stripe header, three tabs (Scan, Match, Save), sticker cards. */
+:root {
+  --bg: #1E0E26;
+  --surface: #331640;
+  --surface-2: #45205A;
+  --line: #0D0511;
+  --cream: #FFF1D6;
+  --muted: #E3CDB8;
+  --tangerine: #F26B21;
+  --mustard: #F5B700;
+  --magenta: #F0447F;
+  --teal: #1FB5A8;
+  --ink: #1E0E26;
+  --font-display: "Shrikhand", "Cooper Black", Georgia, serif;
+  --font-body: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 18px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% -8%, rgba(242,107,33,.22), transparent 55%),
+    repeating-conic-gradient(from 0deg at 50% -6%, #24102F 0deg 5deg, var(--bg) 5deg 10deg);
+  background-color: var(--bg);
+  background-attachment: fixed;
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.45;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
+}
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 20px;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 4px solid var(--mustard); outline-offset: 3px; border-radius: 10px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+
+/* ---------- Header ---------- */
+.masthead { padding-block: 18px 0; display: grid; gap: 14px; }
+.brand-row { display: flex; align-items: center; gap: 12px; }
+.brand { flex: 1; min-width: 0; }
+.wordmark {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.3rem, 11vw, 3.4rem);
+  line-height: .95;
+  color: var(--cream);
+  text-shadow: 3px 3px 0 var(--tangerine), 6px 6px 0 var(--magenta), 9px 9px 0 var(--teal);
+  letter-spacing: .5px;
+  text-wrap: balance;
+}
+.tagline { margin: 12px 0 0; color: var(--muted); font-size: .95rem; }
+.stripes {
+  height: 26px; border-radius: 999px; border: 3px solid var(--line);
+  background: linear-gradient(to bottom, var(--tangerine) 0 25%, var(--mustard) 25% 50%, var(--magenta) 50% 75%, var(--teal) 75% 100%);
+  box-shadow: 0 4px 0 var(--line);
+}
+
+/* ---------- Avatar ---------- */
+.spindle { width: 112px; flex: none; position: relative; }
+.spindle svg { width: 100%; height: auto; display: block; overflow: visible; }
+.bubble {
+  position: relative;
+  background: var(--cream); color: var(--ink);
+  border: 3px solid var(--line); border-radius: 16px;
+  padding: 10px 14px; font-weight: 700; font-size: .98rem;
+  box-shadow: 4px 4px 0 var(--mustard);
+}
+.bubble::before {
+  content: ""; position: absolute; top: -13px; right: 40px;
+  border: 10px solid transparent; border-bottom-color: var(--line); border-top: 0;
+}
+.bubble::after {
+  content: ""; position: absolute; top: -8px; right: 43px;
+  border: 7px solid transparent; border-bottom-color: var(--cream); border-top: 0;
+}
+#sp-grooves { transform-origin: 60px 58px; animation: spin 6s linear infinite; }
+.spindle .face { transition: transform .2s; }
+.spindle .eye { transform-box: fill-box; transform-origin: center; animation: blink 5s infinite; }
+.spindle.happy svg { animation: hop .5s cubic-bezier(.3,1.8,.6,1); }
+.spindle.happy #sp-grooves { animation-duration: .9s; }
+.spindle.think #sp-grooves { animation-duration: 1.6s; }
+.spindle .mouth-happy, .spindle .mouth-sad, .spindle .mouth-o, .spindle .sparkles, .spindle .dots { opacity: 0; transition: opacity .15s; }
+.spindle.happy .mouth-idle, .spindle.sad .mouth-idle, .spindle.think .mouth-idle { opacity: 0; }
+.spindle.happy .mouth-happy, .spindle.happy .sparkles { opacity: 1; }
+.spindle.sad .mouth-sad { opacity: 1; }
+.spindle.think .mouth-o, .spindle.think .dots { opacity: 1; }
+.spindle.think .pupils { transform: translateX(3px) translateY(-2px); }
+.pupils { transition: transform .2s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+@keyframes hop { 0% { transform: translateY(0); } 40% { transform: translateY(-14px) rotate(-6deg); } 100% { transform: translateY(0); } }
+
+/* ---------- Tabs ---------- */
+.tabs {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  padding-block: 10px; background: var(--bg);
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.tab {
+  min-height: 56px; border-radius: 14px; border: 3px solid var(--line);
+  background: var(--surface); color: var(--cream);
+  font-weight: 800; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 0 var(--line); transition: transform .08s;
+}
+.tab[aria-selected="true"] { background: var(--mustard); color: var(--ink); }
+.tab:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--line); }
+.tab .count {
+  min-width: 26px; padding: 0 7px; height: 26px; border-radius: 999px; display: inline-grid; place-items: center;
+  background: var(--ink); color: var(--cream); font-family: var(--font-mono); font-size: .8rem;
+}
+
+/* ---------- Generic blocks ---------- */
+.panel { display: grid; gap: 18px; }
+.card {
+  background: var(--surface); border: 3px solid var(--line); border-radius: var(--r);
+  padding: 18px; box-shadow: 6px 6px 0 var(--tangerine);
+  display: grid; gap: 14px; min-width: 0;
+}
+.card.alt { box-shadow: 6px 6px 0 var(--teal); }
+.card.hot { box-shadow: 6px 6px 0 var(--magenta); }
+.card h2 {
+  margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 1.55rem; line-height: 1.1; text-wrap: balance;
+}
+.card p { margin: 0; }
+.hint { color: var(--muted); font-size: .95rem; }
+.eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 800; color: var(--mustard); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.row > * { min-width: 0; }
+
+.btn {
+  min-height: 52px; padding: 10px 20px; border-radius: 14px; border: 3px solid var(--line);
+  background: var(--cream); color: var(--ink); font-weight: 800; font-size: 1.02rem;
+  box-shadow: 0 5px 0 var(--line); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .08s, box-shadow .08s; text-align: center;
+}
+.btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--line); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.go { background: var(--mustard); }
+.btn.hot { background: var(--magenta); color: var(--ink); }
+.btn.cool { background: var(--teal); color: var(--ink); }
+.btn.ghost { background: transparent; color: var(--cream); border-color: var(--cream); box-shadow: none; }
+.btn.big { min-height: 64px; font-size: 1.2rem; width: 100%; }
+.btn.small { min-height: 44px; padding: 6px 14px; font-size: .92rem; box-shadow: 0 3px 0 var(--line); }
+
+label.field { display: grid; gap: 6px; font-weight: 700; }
+.input {
+  width: 100%; min-height: 52px; border-radius: 12px; border: 3px solid var(--line);
+  background: var(--cream); color: var(--ink); padding: 10px 14px; font-size: 1rem;
+}
+textarea.input { min-height: 110px; font-family: var(--font-mono); font-size: .9rem; }
+.switch { display: flex; gap: 12px; align-items: flex-start; font-weight: 600; cursor: pointer; }
+.switch input { width: 26px; height: 26px; accent-color: var(--mustard); flex: none; margin: 1px 0 0; }
+.switch small { display: block; color: var(--muted); font-weight: 400; }
+
+details.drawer > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-weight: 800; min-height: 44px;
+}
+details.drawer > summary::-webkit-details-marker { display: none; }
+details.drawer > summary::after { content: "+"; font-family: var(--font-display); font-size: 1.6rem; color: var(--mustard); }
+details.drawer[open] > summary::after { content: "–"; }
+
+.conn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 999px;
+  border: 2px solid var(--line); font-weight: 800; font-size: .88rem; background: var(--surface-2);
+}
+.conn.ok { background: var(--teal); color: var(--ink); }
+.conn.bad { background: var(--magenta); color: var(--ink); }
+
+.banner {
+  border: 3px solid var(--line); border-radius: 14px; padding: 14px 16px; font-weight: 600;
+  background: var(--magenta); color: var(--ink); box-shadow: 4px 4px 0 var(--line);
+}
+.banner.info { background: var(--mustard); }
+
+/* ---------- Scanner ---------- */
+.viewfinder {
+  position: relative; border-radius: 22px; overflow: hidden; border: 4px solid var(--line);
+  aspect-ratio: 4 / 3; max-width: 100%; background:
+    repeating-radial-gradient(circle at 50% 50%, #120818 0 2px, #1a0c22 2px 5px);
+  box-shadow: 0 0 0 4px var(--mustard), 8px 8px 0 4px var(--line);
+  margin: 4px;
+}
+.viewfinder video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vf-idle {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px;
+  color: var(--muted); font-weight: 700;
+}
+.vf-overlay { position: absolute; inset: 0; pointer-events: none; }
+.vf-band {
+  position: absolute; left: 10%; right: 10%; top: 25%; bottom: 25%;
+  border-radius: 14px; box-shadow: 0 0 0 999px rgba(30,14,38,.38);
+}
+.vf-band::before, .vf-band::after {
+  content: ""; position: absolute; width: 34px; height: 34px; border: 5px solid var(--mustard);
+}
+.vf-band::before { top: -4px; left: -4px; border-right: 0; border-bottom: 0; border-radius: 12px 0 0 0; }
+.vf-band::after { bottom: -4px; right: -4px; border-left: 0; border-top: 0; border-radius: 0 0 12px 0; }
+.laser {
+  position: absolute; left: 6%; right: 6%; height: 3px; top: 50%;
+  background: var(--magenta); box-shadow: 0 0 12px 3px var(--magenta); border-radius: 2px;
+  animation: sweep 1.6s ease-in-out infinite alternate;
+}
+@keyframes sweep { from { top: 12%; } to { top: 86%; } }
+.viewfinder.flash::after {
+  content: ""; position: absolute; inset: 0; background: var(--teal); opacity: .55; animation: flash .35s forwards;
+}
+.viewfinder.dupe::after {
+  content: ""; position: absolute; inset: 0; background: var(--mustard); opacity: .45; animation: flash .35s forwards;
+}
+@keyframes flash { to { opacity: 0; } }
+.vf-tools { position: absolute; right: 10px; top: 10px; display: flex; gap: 8px; pointer-events: auto; }
+.vf-tools .btn { min-height: 44px; padding: 6px 12px; font-size: .9rem; }
+.engine { position: absolute; left: 10px; bottom: 10px; font-family: var(--font-mono); font-size: .72rem; background: rgba(13,5,17,.75); padding: 3px 8px; border-radius: 8px; color: var(--muted); }
+
+.tally { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.tally-num { font-family: var(--font-display); font-size: clamp(3rem, 18vw, 4.6rem); line-height: .9; color: var(--mustard); text-shadow: 4px 4px 0 var(--line); font-variant-numeric: tabular-nums; }
+.tally-label { font-weight: 800; font-size: 1.1rem; }
+
+.feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.feed li {
+  display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 12px;
+  background: var(--surface-2); border: 2px solid var(--line); min-width: 0;
+}
+.feed li.new { animation: pop .4s cubic-bezier(.3,1.6,.6,1); }
+@keyframes pop { from { transform: scale(.9); background: var(--teal); } to { transform: scale(1); } }
+.code { font-family: var(--font-mono); font-weight: 700; letter-spacing: .04em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.feed .code { flex: 1; min-width: 0; }
+.qty { display: inline-flex; align-items: center; gap: 4px; }
+.qty b { min-width: 2ch; text-align: center; font-family: var(--font-mono); }
+.icon-btn {
+  width: 44px; height: 44px; flex: none; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--cream); color: var(--ink); font-weight: 800; font-size: 1.15rem; display: grid; place-items: center;
+}
+
+/* ---------- Match ---------- */
+.progress { height: 22px; border-radius: 999px; border: 3px solid var(--line); background: var(--surface-2); overflow: hidden; }
+.progress > div {
+  height: 100%; width: 0%;
+  background: repeating-linear-gradient(-45deg, var(--mustard) 0 12px, var(--tangerine) 12px 24px);
+  transition: width .3s;
+}
+.filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.chip-btn {
+  flex: none; min-height: 44px; padding: 6px 14px; border-radius: 999px; border: 2px solid var(--line);
+  background: var(--surface-2); color: var(--cream); font-weight: 700; font-size: .9rem; white-space: nowrap;
+}
+.chip-btn[aria-pressed="true"] { background: var(--cream); color: var(--ink); }
+
+.records { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.rec {
+  background: var(--surface); border: 3px solid var(--line); border-radius: var(--r); padding: 14px;
+  display: grid; gap: 12px; min-width: 0; box-shadow: 5px 5px 0 var(--surface-2);
+}
+.rec.s-ready { box-shadow: 5px 5px 0 var(--teal); }
+.rec.s-multiple { box-shadow: 5px 5px 0 var(--mustard); }
+.rec.s-notfound, .rec.s-error { box-shadow: 5px 5px 0 var(--magenta); }
+.rec.s-added, .rec.s-owned { opacity: .85; box-shadow: 5px 5px 0 var(--cream); }
+.rec-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.status {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px; border-radius: 999px;
+  border: 2px solid var(--line); font-weight: 800; font-size: .82rem; background: var(--surface-2); color: var(--cream);
+}
+.status.ready { background: var(--teal); color: var(--ink); }
+.status.multiple { background: var(--mustard); color: var(--ink); }
+.status.notfound, .status.error { background: var(--magenta); color: var(--ink); }
+.status.added, .status.owned { background: var(--cream); color: var(--ink); }
+.status.searching, .status.adding { background: var(--tangerine); color: var(--ink); }
+
+.release { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: start; min-width: 0; }
+.release img, .release .noart {
+  width: 64px; height: 64px; border-radius: 8px; border: 2px solid var(--line); object-fit: cover; background:
+    radial-gradient(circle, var(--tangerine) 0 18%, var(--line) 19% 22%, #2b1236 23% 100%);
+}
+.release .meta { min-width: 0; }
+.release .artist { font-weight: 800; overflow-wrap: anywhere; }
+.release .title { overflow-wrap: anywhere; }
+.release .sub { color: var(--muted); font-size: .88rem; overflow-wrap: anywhere; }
+.release a { color: var(--mustard); font-weight: 700; font-size: .88rem; }
+
+fieldset.picks { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
+fieldset.picks legend { font-weight: 800; margin-bottom: 6px; padding: 0; }
+.pick {
+  display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center;
+  padding: 10px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface-2); cursor: pointer;
+}
+.pick:has(input:checked) { background: var(--cream); color: var(--ink); }
+.pick:has(input:checked) .sub, .pick:has(input:checked) a { color: var(--ink); }
+.pick input { width: 24px; height: 24px; accent-color: var(--tangerine); margin: 0; }
+.more-picks { justify-self: start; }
+
+.retry { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.retry .row { flex-wrap: nowrap; }
+.retry select { flex: 0 0 auto; width: auto; }
+.retry input { flex: 1; }
+
+.empty { text-align: center; padding: 26px 14px; color: var(--muted); font-weight: 600; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); z-index: 20;
+  background: var(--cream); color: var(--ink); border: 3px solid var(--line); border-radius: 14px;
+  padding: 12px 18px; font-weight: 800; box-shadow: 5px 5px 0 var(--magenta); max-width: calc(100% - 32px);
+  transition: opacity .2s, transform .2s;
+}
+.toast[data-show="false"] { opacity: 0; transform: translate(-50%, 20px); pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .laser { top: 50%; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="brand-row">
+      <div class="brand">
+        <h1 class="wordmark">Crate Digger</h1>
+        <p class="tagline">Scan the whole shelf. Match it on Discogs after.</p>
+      </div>
+      <div class="spindle" id="spindle" aria-hidden="true">
+        <svg viewBox="0 0 120 140" role="presentation">
+          <!-- legs + sneakers -->
+          <path d="M44 104 L40 124" stroke="#0D0511" stroke-width="5" stroke-linecap="round"/>
+          <path d="M76 104 L80 124" stroke="#0D0511" stroke-width="5" stroke-linecap="round"/>
+          <path d="M28 126 q2 -8 14 -6 l6 2 q2 6 -4 7 h-14 q-3 0 -2 -3z" fill="#F0447F" stroke="#0D0511" stroke-width="3"/>
+          <path d="M92 126 q-2 -8 -14 -6 l-6 2 q-2 6 4 7 h14 q3 0 2 -3z" fill="#1FB5A8" stroke="#0D0511" stroke-width="3"/>
+          <!-- arms -->
+          <path d="M10 62 q-6 -18 6 -26" fill="none" stroke="#0D0511" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="17" cy="35" r="6" fill="#FFF1D6" stroke="#0D0511" stroke-width="3"/>
+          <path d="M110 62 q8 10 2 22" fill="none" stroke="#0D0511" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="111" cy="86" r="6" fill="#FFF1D6" stroke="#0D0511" stroke-width="3"/>
+          <!-- record body -->
+          <circle cx="60" cy="58" r="52" fill="#120818" stroke="#0D0511" stroke-width="4"/>
+          <g id="sp-grooves" fill="none">
+            <circle cx="60" cy="58" r="46" stroke="#3a2245" stroke-width="1.5"/>
+            <circle cx="60" cy="58" r="41" stroke="#3a2245" stroke-width="1.5"/>
+            <circle cx="60" cy="58" r="36" stroke="#3a2245" stroke-width="1.5"/>
+            <circle cx="60" cy="58" r="31" stroke="#3a2245" stroke-width="1.5"/>
+            <path d="M24 30 A46 46 0 0 1 60 12" stroke="#FFF1D6" stroke-opacity=".55" stroke-width="4" stroke-linecap="round"/>
+            <path d="M98 84 A41 41 0 0 1 80 95" stroke="#FFF1D6" stroke-opacity=".3" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <!-- label / face -->
+          <g class="face">
+            <circle cx="60" cy="58" r="25" fill="#F26B21" stroke="#0D0511" stroke-width="3"/>
+            <path d="M37 52 A25 25 0 0 1 83 52" fill="#F5B700" stroke="none"/>
+            <circle cx="60" cy="58" r="25" fill="none" stroke="#0D0511" stroke-width="3"/>
+            <g class="eyes">
+              <ellipse class="eye" cx="51" cy="54" rx="5.5" ry="6.5" fill="#FFF1D6" stroke="#0D0511" stroke-width="2"/>
+              <ellipse class="eye" cx="69" cy="54" rx="5.5" ry="6.5" fill="#FFF1D6" stroke="#0D0511" stroke-width="2"/>
+              <g class="pupils">
+                <circle cx="52" cy="55" r="2.6" fill="#0D0511"/>
+                <circle cx="70" cy="55" r="2.6" fill="#0D0511"/>
+              </g>
+            </g>
+            <circle cx="60" cy="62" r="1.6" fill="#0D0511"/>
+            <path class="mouth-idle" d="M53 68 q7 5 14 0" fill="none" stroke="#0D0511" stroke-width="2.6" stroke-linecap="round"/>
+            <path class="mouth-happy" d="M50 66 q10 12 20 0 z" fill="#0D0511" stroke="#0D0511" stroke-width="2" stroke-linejoin="round"/>
+            <path class="mouth-sad" d="M53 72 q7 -6 14 0" fill="none" stroke="#0D0511" stroke-width="2.6" stroke-linecap="round"/>
+            <ellipse class="mouth-o" cx="60" cy="70" rx="3.5" ry="4" fill="#0D0511"/>
+          </g>
+          <g class="sparkles" fill="#F5B700" stroke="#0D0511" stroke-width="1.5">
+            <path d="M104 14 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z"/>
+            <path d="M8 96 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/>
+          </g>
+          <g class="dots" fill="#FFF1D6">
+            <circle cx="96" cy="16" r="3"/><circle cx="106" cy="10" r="3"/><circle cx="116" cy="4" r="3"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="bubble" id="bubble">Hi, I'm Spindle. Connect Discogs, then point me at some barcodes.</div>
+    <div class="stripes" aria-hidden="true"></div>
+  </header>
+
+  <!-- Connection -->
+  <section class="card alt" aria-labelledby="conn-h">
+    <details class="drawer" id="conn-drawer">
+      <summary>
+        <span id="conn-h">Discogs connection</span>
+        <span class="conn" id="conn-pill">Not connected</span>
+      </summary>
+      <div class="panel" style="margin-top:14px">
+        <p class="hint">Make a free personal token on Discogs under Settings → Developers → Generate new token. Paste it here. It is sent only to Discogs.</p>
+        <label class="field" for="token">Personal access token
+          <input class="input" id="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste your token">
+        </label>
+        <div class="row">
+          <button class="btn go" id="connect-btn" type="button">Connect</button>
+          <button class="btn ghost small" id="show-token" type="button" aria-pressed="false">Show token</button>
+        </div>
+        <label class="switch" for="remember-token"><input type="checkbox" id="remember-token">
+          <span>Remember token on this phone<small>Saved in this browser only. Turn off on a shared device.</small></span>
+        </label>
+        <label class="switch" for="opt-vinyl"><input type="checkbox" id="opt-vinyl" checked>
+          <span>Vinyl only<small>Ignore CD and cassette pressings that share the barcode.</small></span>
+        </label>
+        <label class="switch" for="opt-owned"><input type="checkbox" id="opt-owned" checked>
+          <span>Skip records already in my collection<small>Adds one quick check per record so nothing gets doubled.</small></span>
+        </label>
+        <label class="switch" for="opt-sound"><input type="checkbox" id="opt-sound" checked>
+          <span>Beep and buzz on each scan</span>
+        </label>
+      </div>
+    </details>
+  </section>
+
+  <div id="net-banner" class="banner" role="alert" hidden></div>
+
+  <nav class="tabs" role="tablist" aria-label="Steps">
+    <button class="tab" role="tab" id="tab-scan" aria-controls="panel-scan" aria-selected="true">Scan <span class="count" id="c-scan">0</span></button>
+    <button class="tab" role="tab" id="tab-match" aria-controls="panel-match" aria-selected="false" tabindex="-1">Match <span class="count" id="c-match">0</span></button>
+    <button class="tab" role="tab" id="tab-save" aria-controls="panel-save" aria-selected="false" tabindex="-1">Save</button>
+  </nav>
+
+  <!-- ============ SCAN ============ -->
+  <section class="panel" id="panel-scan" role="tabpanel" aria-labelledby="tab-scan">
+    <div class="viewfinder" id="viewfinder">
+      <video id="video" playsinline muted aria-label="Camera preview"></video>
+      <div class="vf-idle" id="vf-idle">Camera is off.<br>Tap Start scanning below.</div>
+      <div class="vf-overlay" id="vf-overlay" hidden>
+        <div class="vf-band"></div>
+        <div class="laser"></div>
+      </div>
+      <div class="vf-tools"><button class="btn small" id="torch-btn" type="button" aria-pressed="false" hidden>Light</button></div>
+      <div class="engine" id="engine" hidden></div>
+    </div>
+
+    <button class="btn big go" id="scan-btn" type="button">Start scanning</button>
+    <p class="hint" id="scan-help">Hold each jacket's barcode inside the yellow corners. It's captured automatically, with a beep. Keep going, no tapping needed.</p>
+
+    <div class="card">
+      <div class="tally" aria-live="off">
+        <span class="tally-num" id="tally">0</span>
+        <span class="tally-label">records in the crate</span>
+      </div>
+      <ul class="feed" id="feed" aria-label="Most recent scans"></ul>
+      <p class="empty" id="feed-empty">Nothing scanned yet.</p>
+    </div>
+
+    <section class="card alt" aria-labelledby="manual-h">
+      <h2 id="manual-h">No barcode?</h2>
+      <p class="hint">Older records often don't have one. Type the catalog number from the spine or label instead.</p>
+      <form id="manual-form" class="panel" novalidate>
+        <label class="field" for="manual-kind">Type
+          <select class="input" id="manual-kind">
+            <option value="catno">Catalog number</option>
+            <option value="barcode">Barcode digits</option>
+            <option value="query">Artist and title</option>
+          </select>
+        </label>
+        <label class="field" for="manual-input">Value
+          <input class="input" id="manual-input" autocomplete="off" placeholder="e.g. SD 19129">
+        </label>
+        <button class="btn cool" type="submit">Add to crate</button>
+        <p class="hint" id="manual-msg" role="status"></p>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="paste-h">
+      <details class="drawer">
+        <summary><span id="paste-h">Paste a list of barcodes</span></summary>
+        <div class="panel" style="margin-top:12px">
+          <p class="hint">Use this if the camera won't open. One barcode per line, or separated by commas.</p>
+          <label class="field" for="paste-input">Barcodes
+            <textarea class="input" id="paste-input" spellcheck="false"></textarea>
+          </label>
+          <button class="btn cool" id="paste-btn" type="button">Add these</button>
+          <p class="hint" id="paste-msg" role="status"></p>
+        </div>
+      </details>
+    </section>
+  </section>
+
+  <!-- ============ MATCH ============ -->
+  <section class="panel" id="panel-match" role="tabpanel" aria-labelledby="tab-match" hidden>
+    <div class="card hot">
+      <span class="eyebrow">Step 2</span>
+      <h2>Match on Discogs</h2>
+      <p class="hint" id="match-summary">Scan some records first.</p>
+      <div class="progress" role="progressbar" aria-label="Matching progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress"><div id="progress-bar"></div></div>
+      <p class="hint" id="progress-text" role="status"></p>
+      <div class="row">
+        <button class="btn go" id="match-btn" type="button">Find matches</button>
+        <button class="btn ghost" id="pause-btn" type="button" hidden>Pause</button>
+      </div>
+      <button class="btn big cool" id="add-btn" type="button" disabled>Add 0 to my collection</button>
+    </div>
+
+    <div class="filters" role="group" aria-label="Show records">
+      <button class="chip-btn" data-filter="all" aria-pressed="true">All</button>
+      <button class="chip-btn" data-filter="multiple" aria-pressed="false">Pick one</button>
+      <button class="chip-btn" data-filter="notfound" aria-pressed="false">Not found</button>
+      <button class="chip-btn" data-filter="ready" aria-pressed="false">Ready</button>
+      <button class="chip-btn" data-filter="done" aria-pressed="false">Done</button>
+      <button class="chip-btn" data-filter="queued" aria-pressed="false">Waiting</button>
+    </div>
+    <ul class="records" id="records" aria-label="Records"></ul>
+    <p class="empty" id="records-empty" hidden>Nothing here.</p>
+  </section>
+
+  <!-- ============ SAVE ============ -->
+  <section class="panel" id="panel-save" role="tabpanel" aria-labelledby="tab-save" hidden>
+    <div class="card alt">
+      <span class="eyebrow">Step 3</span>
+      <h2>Keep a copy</h2>
+      <p class="hint">Your crate is saved in this browser automatically. Download a backup any time, even before matching.</p>
+      <button class="btn big go" id="dl-csv" type="button">Download spreadsheet (.csv)</button>
+      <p class="hint">Every record with barcode, status, Discogs release ID, artist, title, year, label and link.</p>
+      <button class="btn cool" id="dl-txt" type="button">Download barcode list (.txt)</button>
+      <button class="btn" id="copy-codes" type="button">Copy barcode list</button>
+      <p class="hint" id="save-msg" role="status"></p>
+    </div>
+    <div class="card hot">
+      <h2>Start a new crate</h2>
+      <p class="hint">Removes every scanned record from this phone. Records already added to Discogs stay there.</p>
+      <button class="btn hot" id="clear-btn" type="button">Clear crate</button>
+      <div class="row" id="clear-confirm" hidden>
+        <span style="font-weight:800">Remove <span id="clear-n">0</span> records?</span>
+        <button class="btn hot small" id="clear-yes" type="button">Yes, clear</button>
+        <button class="btn ghost small" id="clear-no" type="button">Keep them</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast" data-show="false" aria-hidden="true"></div>
+<div class="sr-only" id="announcer" aria-live="polite" aria-atomic="true"></div>
+<canvas id="frame" hidden></canvas>
+
+<script>
+/* ZXing loader with a fallback CDN. Native BarcodeDetector is used when the phone has it. */
+window.__zxingReady = new Promise(function (resolve) {
+  var urls = [
+    "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js",
+    "https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"
+  ];
+  (function next(i) {
+    if (i >= urls.length) return resolve(false);
+    var s = document.createElement("script");
+    s.src = urls[i];
+    s.onload = function () { resolve(!!window.ZXing); };
+    s.onerror = function () { s.remove(); next(i + 1); };
+    document.head.appendChild(s);
+  })(0);
+});
+</script>
+<script>
+(function () {
+"use strict";
+
+/* =================== Pure helpers =================== */
+function digits(s) { return String(s || "").replace(/\D/g, ""); }
+
+function mod10Valid(code) {
+  if (!/^\d+$/.test(code) || code.length < 8) return false;
+  var sum = 0, n = code.length;
+  for (var i = n - 2, w = 3; i >= 0; i--, w = (w === 3 ? 1 : 3)) sum += Number(code[i]) * w;
+  return (10 - (sum % 10)) % 10 === Number(code[n - 1]);
+}
+
+function upcEtoA(e) {
+  if (!/^[01]\d{7}$/.test(e)) return null;
+  var ns = e[0], d = e.slice(1, 7), c = e[7], last = d[5], body;
+  if (last <= "2") body = d[0] + d[1] + last + "0000" + d[2] + d[3] + d[4];
+  else if (last === "3") body = d[0] + d[1] + d[2] + "00000" + d[3] + d[4];
+  else if (last === "4") body = d[0] + d[1] + d[2] + d[3] + "00000" + d[4];
+  else body = d[0] + d[1] + d[2] + d[3] + d[4] + "0000" + last;
+  return ns + body + c;
+}
+
+/* Canonical form: UPC-A stays 12 digits (EAN-13 with a leading 0 is shortened). */
+function canonical(raw) {
+  var c = digits(raw);
+  if (c.length === 13 && c[0] === "0") c = c.slice(1);
+  return c;
+}
+
+function barcodeValid(code) {
+  if (code.length === 12 || code.length === 13) return mod10Valid(code);
+  if (code.length === 8) {
+    if (mod10Valid(code)) return true;
+    var a = upcEtoA(code);
+    return !!a && mod10Valid(a);
+  }
+  return false;
+}
+
+function searchVariants(code) {
+  var out = [code];
+  if (code.length === 12) out.push("0" + code);
+  if (code.length === 13 && code[0] === "0") out.push(code.slice(1));
+  if (code.length === 8) { var a = upcEtoA(code); if (a && mod10Valid(a)) out.push(a); }
+  return out.filter(function (v, i) { return out.indexOf(v) === i; });
+}
+
+function csvCell(v) {
+  var s = v == null ? "" : String(v);
+  return /[",\r\n]/.test(s) || /^[=+\-@]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (ch) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+  });
+}
+
+function splitTitle(t) {
+  var s = String(t || ""), i = s.indexOf(" - ");
+  return i > -1 ? { artist: s.slice(0, i), title: s.slice(i + 3) } : { artist: "", title: s };
+}
+
+window.__crateTest = { mod10Valid: mod10Valid, upcEtoA: upcEtoA, canonical: canonical, barcodeValid: barcodeValid, searchVariants: searchVariants, csvCell: csvCell, splitTitle: splitTitle };
+
+/* =================== State =================== */
+var KEY = "crateDigger.v1";
+var state = { items: [], settings: { vinyl: true, owned: true, sound: true, remember: false }, token: "", username: "" };
+var uid = 0;
+
+function load() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    var s = JSON.parse(raw);
+    if (Array.isArray(s.items)) state.items = s.items;
+    if (s.settings) Object.assign(state.settings, s.settings);
+    if (s.settings && s.settings.remember && s.token) state.token = s.token;
+    if (s.username) state.username = s.username;
+    state.items.forEach(function (it) {
+      if (it.status === "searching") it.status = "queued";
+      if (it.status === "adding") it.status = "ready";
+      uid = Math.max(uid, Number(it.id) || 0);
+    });
+  } catch (e) { /* storage unavailable: start fresh */ }
+}
+var saveTimer = null;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        items: state.items, settings: state.settings,
+        token: state.settings.remember ? state.token : "",
+        username: state.username
+      }));
+    } catch (e) { /* ignore */ }
+  }, 150);
+}
+
+function findByCode(kind, value) {
+  for (var i = 0; i < state.items.length; i++) {
+    var it = state.items[i];
+    if (it.kind === kind && it.value.toLowerCase() === value.toLowerCase()) return it;
+  }
+  return null;
+}
+
+function addItem(kind, value) {
+  var it = { id: ++uid, kind: kind, value: value, qty: 1, scannedAt: new Date().toISOString(), status: "queued", candidates: [], chosen: null, note: "" };
+  state.items.push(it);
+  save();
+  return it;
+}
+
+/* =================== DOM refs =================== */
+function $(id) { return document.getElementById(id); }
+var el = {
+  bubble: $("bubble"), spindle: $("spindle"), tally: $("tally"), feed: $("feed"), feedEmpty: $("feed-empty"),
+  video: $("video"), vf: $("viewfinder"), vfIdle: $("vf-idle"), vfOverlay: $("vf-overlay"), engine: $("engine"),
+  scanBtn: $("scan-btn"), torchBtn: $("torch-btn"), announcer: $("announcer"), toast: $("toast"),
+  cScan: $("c-scan"), cMatch: $("c-match"), records: $("records"), recordsEmpty: $("records-empty"),
+  matchBtn: $("match-btn"), pauseBtn: $("pause-btn"), addBtn: $("add-btn"), progress: $("progress"),
+  progressBar: $("progress-bar"), progressText: $("progress-text"), matchSummary: $("match-summary"),
+  token: $("token"), connPill: $("conn-pill"), connDrawer: $("conn-drawer"), netBanner: $("net-banner"),
+  canvas: $("frame")
+};
+
+/* =================== Feedback =================== */
+var moodTimer = null;
+function mood(m, line, hold) {
+  el.spindle.className = "spindle " + (m || "");
+  if (line) el.bubble.textContent = line;
+  clearTimeout(moodTimer);
+  if (m === "happy" || m === "sad") {
+    moodTimer = setTimeout(function () { el.spindle.className = "spindle"; }, hold || 900);
+  }
+}
+var announceTimer = null;
+function announce(msg) {
+  clearTimeout(announceTimer);
+  el.announcer.textContent = "";
+  announceTimer = setTimeout(function () { el.announcer.textContent = msg; }, 60);
+}
+var toastTimer = null;
+function toast(msg) {
+  el.toast.textContent = msg;
+  el.toast.dataset.show = "true";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { el.toast.dataset.show = "false"; }, 2200);
+}
+
+var audioCtx = null;
+function unlockAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  } catch (e) { audioCtx = null; }
+}
+function chirp(kind) {
+  if (!state.settings.sound) return;
+  try { if (navigator.vibrate) navigator.vibrate(kind === "dupe" ? [40, 60, 40] : 60); } catch (e) {}
+  if (!audioCtx) return;
+  try {
+    var t = audioCtx.currentTime;
+    var notes = kind === "dupe" ? [[440, 0], [330, 0.09]] : [[880, 0], [1320, 0.07]];
+    notes.forEach(function (n) {
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "square"; o.frequency.value = n[0];
+      g.gain.setValueAtTime(0.0001, t + n[1]);
+      g.gain.exponentialRampToValueAtTime(0.12, t + n[1] + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + 0.08);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t + n[1]); o.stop(t + n[1] + 0.09);
+    });
+  } catch (e) {}
+}
+function flash(cls) {
+  el.vf.classList.remove("flash", "dupe");
+  void el.vf.offsetWidth;
+  el.vf.classList.add(cls);
+  setTimeout(function () { el.vf.classList.remove(cls); }, 400);
+}
+
+/* =================== Scanner =================== */
+var scan = { on: false, stream: null, track: null, detector: null, zx: null, timer: null, busy: false, frame: 0, wake: null, torch: false };
+var pending = { code: null, count: 0, t: 0 };
+var recent = new Map();
+
+function onRead(raw, format) {
+  var code = canonical(raw);
+  if (!barcodeValid(code)) return;
+  var now = performance.now();
+  if (pending.code === code && now - pending.t < 1500) pending.count++;
+  else { pending.code = code; pending.count = 1; }
+  pending.t = now;
+  var need = code.length === 8 ? 3 : 2;
+  if (pending.count >= need) { pending.count = 0; accept(code, now); }
+}
+
+function accept(code, now) {
+  var last = recent.get(code);
+  recent.set(code, now);
+  if (last && now - last < 4000) return; /* same jacket still in view */
+  var existing = findByCode("barcode", code);
+  if (existing) {
+    chirp("dupe"); flash("dupe");
+    mood("think", "Already in the crate. Two copies? Tap + next to it.");
+    toast("Already scanned " + code);
+    announce("Already scanned " + code);
+    highlightFeed(existing.id);
+    return;
+  }
+  var it = addItem("barcode", code);
+  chirp("ok"); flash("flash");
+  var n = state.items.length;
+  mood("happy", pickLine(n) , 700);
+  announce("Captured " + code.split("").join(" ") + ". " + n + " in the crate.");
+  renderScan(it.id);
+  renderCounts();
+}
+
+var lines = ["Got it!", "Into the crate!", "Nice one.", "Spin it!", "Another gem.", "Dug it.", "Groovy.", "Keep 'em coming."];
+function pickLine(n) {
+  if (n % 25 === 0) return n + " records! You're on a roll.";
+  return lines[n % lines.length] + " #" + n;
+}
+
+async function startScan() {
+  unlockAudio();
+  setBanner("");
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setBanner("This browser can't open the camera here. Open the page over https in Safari or Chrome, or use Paste a list below.");
+    mood("sad", "I can't see anything from here.");
+    return;
+  }
+  el.scanBtn.disabled = true;
+  el.scanBtn.textContent = "Opening camera…";
+  try {
+    scan.stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+    });
+  } catch (err) {
+    el.scanBtn.disabled = false;
+    el.scanBtn.textContent = "Start scanning";
+    var msg = err && err.name === "NotAllowedError"
+      ? "Camera permission was blocked. Allow camera access for this site in your browser settings, then tap Start scanning again."
+      : "The camera couldn't start (" + (err && err.name || "unknown error") + "). Close other apps using the camera and try again.";
+    setBanner(msg);
+    mood("sad", "I couldn't open the camera.");
+    return;
+  }
+  scan.track = scan.stream.getVideoTracks()[0];
+  el.video.srcObject = scan.stream;
+  try { await el.video.play(); } catch (e) {}
+  try { scan.track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(function () {}); } catch (e) {}
+
+  /* Torch button only if the camera supports it */
+  try {
+    var caps = scan.track.getCapabilities ? scan.track.getCapabilities() : {};
+    el.torchBtn.hidden = !caps.torch;
+  } catch (e) { el.torchBtn.hidden = true; }
+
+  /* Pick an engine */
+  scan.detector = null;
+  if ("BarcodeDetector" in window) {
+    try {
+      var fmts = await window.BarcodeDetector.getSupportedFormats();
+      var want = ["ean_13", "upc_a", "ean_8", "upc_e"].filter(function (f) { return fmts.indexOf(f) > -1; });
+      if (want.indexOf("ean_13") > -1) scan.detector = new window.BarcodeDetector({ formats: want });
+    } catch (e) { scan.detector = null; }
+  }
+  if (!scan.detector) {
+    var ok = await window.__zxingReady;
+    if (!ok) {
+      stopScan();
+      setBanner("The barcode reader couldn't load. Check your internet connection and reload the page.");
+      mood("sad", "My reader didn't load.");
+      return;
+    }
+    var Z = window.ZXing;
+    var hints = new Map();
+    hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_E]);
+    hints.set(Z.DecodeHintType.TRY_HARDER, true);
+    var reader = new Z.MultiFormatReader();
+    reader.setHints(hints);
+    scan.zx = { Z: Z, reader: reader };
+  }
+  el.engine.textContent = scan.detector ? "native reader" : "zxing reader";
+  el.engine.hidden = false;
+
+  scan.on = true;
+  pending = { code: null, count: 0, t: 0 };
+  el.vfIdle.hidden = true;
+  el.vfOverlay.hidden = false;
+  el.scanBtn.disabled = false;
+  el.scanBtn.textContent = "Stop scanning";
+  el.scanBtn.classList.remove("go"); el.scanBtn.classList.add("hot");
+  mood("", "Rolling. Show me barcodes, one after another.");
+  announce("Scanning. Hold a barcode inside the frame.");
+  requestWake();
+  loop();
+}
+
+function stopScan() {
+  scan.on = false;
+  clearTimeout(scan.timer);
+  if (scan.stream) scan.stream.getTracks().forEach(function (t) { t.stop(); });
+  scan.stream = null; scan.track = null; scan.torch = false;
+  el.video.srcObject = null;
+  el.vfIdle.hidden = false;
+  el.vfOverlay.hidden = true;
+  el.torchBtn.hidden = true; el.torchBtn.setAttribute("aria-pressed", "false");
+  el.engine.hidden = true;
+  el.scanBtn.disabled = false;
+  el.scanBtn.textContent = "Start scanning";
+  el.scanBtn.classList.remove("hot"); el.scanBtn.classList.add("go");
+  releaseWake();
+}
+
+function loop() {
+  if (!scan.on) return;
+  if (scan.busy || el.video.readyState < 2) { scan.timer = setTimeout(loop, 60); return; }
+  scan.busy = true;
+  var p = scan.detector ? readNative() : Promise.resolve(readZX());
+  p.then(function () {
+    scan.busy = false;
+    if (scan.on) scan.timer = setTimeout(loop, scan.detector ? 50 : 30);
+  }, function () {
+    scan.busy = false;
+    if (scan.on) scan.timer = setTimeout(loop, 80);
+  });
+}
+
+function readNative() {
+  return scan.detector.detect(el.video).then(function (codes) {
+    for (var i = 0; i < codes.length; i++) onRead(codes[i].rawValue, codes[i].format);
+  });
+}
+
+function readZX() {
+  var v = el.video, vw = v.videoWidth, vh = v.videoHeight;
+  if (!vw || !vh) return;
+  /* Crop the middle of the frame, where the guide corners are, then scale down for speed. */
+  var sw = Math.round(vw * 0.86), sh = Math.round(vh * 0.6);
+  var sx = Math.round((vw - sw) / 2), sy = Math.round((vh - sh) / 2);
+  var cw = Math.min(800, sw), ch = Math.round(sh * (cw / sw));
+  var c = el.canvas;
+  if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
+  var ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(v, sx, sy, sw, sh, 0, 0, cw, ch);
+  var Z = scan.zx.Z;
+  scan.frame++;
+  try {
+    var src = new Z.HTMLCanvasElementLuminanceSource(c);
+    var Alt = Z.GlobalHistogramBinarizer || Z.HybridBinarizer;
+    var bin = scan.frame % 2 ? new Z.HybridBinarizer(src) : new Alt(src);
+    var res = scan.zx.reader.decodeWithState(new Z.BinaryBitmap(bin));
+    if (res) onRead(res.getText(), res.getBarcodeFormat());
+  } catch (e) { /* no barcode in this frame */ }
+}
+
+async function requestWake() {
+  try { if ("wakeLock" in navigator) scan.wake = await navigator.wakeLock.request("screen"); } catch (e) { scan.wake = null; }
+}
+function releaseWake() {
+  try { if (scan.wake) scan.wake.release(); } catch (e) {}
+  scan.wake = null;
+}
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden && scan.on) stopScan();
+});
+
+el.scanBtn.addEventListener("click", function () { scan.on ? stopScan() : startScan(); });
+el.torchBtn.addEventListener("click", function () {
+  if (!scan.track) return;
+  scan.torch = !scan.torch;
+  scan.track.applyConstraints({ advanced: [{ torch: scan.torch }] }).catch(function () {
+    scan.torch = false; toast("This camera's light can't be switched on.");
+  });
+  el.torchBtn.setAttribute("aria-pressed", String(scan.torch));
+});
+
+/* =================== Scan view rendering =================== */
+function itemLabel(it) {
+  if (it.kind === "barcode") return it.value;
+  if (it.kind === "catno") return "Cat# " + it.value;
+  return it.value;
+}
+
+function renderScan(newId) {
+  var items = state.items.slice(-8).reverse();
+  el.tally.textContent = state.items.length;
+  el.feedEmpty.hidden = state.items.length > 0;
+  el.feed.innerHTML = items.map(function (it) {
+    return '<li data-id="' + it.id + '"' + (it.id === newId ? ' class="new"' : "") + '>' +
+      '<span class="code">' + esc(itemLabel(it)) + "</span>" +
+      '<span class="qty"><button class="icon-btn" type="button" data-act="minus" aria-label="One fewer copy of ' + esc(itemLabel(it)) + '">−</button>' +
+      '<b aria-label="copies">' + it.qty + "</b>" +
+      '<button class="icon-btn" type="button" data-act="plus" aria-label="One more copy of ' + esc(itemLabel(it)) + '">+</button></span>' +
+      '<button class="icon-btn" type="button" data-act="remove" aria-label="Remove ' + esc(itemLabel(it)) + '">✕</button></li>';
+  }).join("");
+}
+function highlightFeed(id) {
+  var li = el.feed.querySelector('[data-id="' + id + '"]');
+  if (!li) { renderScan(id); return; }
+  li.classList.remove("new"); void li.offsetWidth; li.classList.add("new");
+}
+
+el.feed.addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-act]"); if (!b) return;
+  var id = Number(b.closest("li").dataset.id);
+  itemAction(id, b.dataset.act);
+});
+
+function itemAction(id, act) {
+  var it = state.items.find(function (x) { return x.id === id; });
+  if (!it) return;
+  if (act === "plus") { it.qty++; announce(it.qty + " copies"); }
+  if (act === "minus") {
+    if (it.qty > 1) { it.qty--; announce(it.qty + " copies"); }
+    else act = "remove";
+  }
+  if (act === "remove") {
+    state.items = state.items.filter(function (x) { return x.id !== id; });
+    recent.delete(it.value);
+    announce("Removed " + itemLabel(it));
+  }
+  save(); renderAll();
+}
+
+/* Manual entry */
+$("manual-kind").addEventListener("change", function () {
+  var ph = { catno: "e.g. SD 19129", barcode: "e.g. 075678164125", query: "e.g. Fleetwood Mac Rumours" };
+  $("manual-input").placeholder = ph[this.value];
+});
+$("manual-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var kind = $("manual-kind").value, raw = $("manual-input").value.trim(), msg = $("manual-msg");
+  if (!raw) { msg.textContent = "Type something first."; return; }
+  var value = raw;
+  if (kind === "barcode") {
+    value = canonical(raw);
+    if (!barcodeValid(value)) { msg.textContent = "That barcode doesn't add up. Check the digits, including the small ones at each end."; return; }
+  }
+  if (findByCode(kind, value)) { msg.textContent = "That one's already in the crate."; return; }
+  addItem(kind, value);
+  $("manual-input").value = "";
+  msg.textContent = "Added " + value + ".";
+  mood("happy", "Typed in by hand. Respect.", 700);
+  renderAll();
+});
+
+/* Paste */
+$("paste-btn").addEventListener("click", function () {
+  var toks = $("paste-input").value.split(/[\s,;]+/).map(canonical).filter(Boolean);
+  var added = 0, dup = 0, bad = 0;
+  toks.forEach(function (c) {
+    if (!barcodeValid(c)) { bad++; return; }
+    if (findByCode("barcode", c)) { dup++; return; }
+    addItem("barcode", c); added++;
+  });
+  $("paste-msg").textContent = "Added " + added + "." + (dup ? " " + dup + " already in the crate." : "") + (bad ? " " + bad + " didn't look like barcodes." : "");
+  if (added) { $("paste-input").value = ""; mood("happy", "Whoa, " + added + " at once!", 900); }
+  renderAll();
+});
+
+/* =================== Discogs API =================== */
+var API = "https://api.discogs.com";
+var lastCall = 0;
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+function ApiError(kind, message, status) { this.kind = kind; this.message = message; this.status = status; }
+
+async function api(path, method) {
+  if (!state.token) throw new ApiError("auth", "Add your Discogs token first.");
+  var gap = 1100 - (Date.now() - lastCall);
+  if (gap > 0) await sleep(gap);
+  lastCall = Date.now();
+  var url = API + path + (path.indexOf("?") > -1 ? "&" : "?") + "token=" + encodeURIComponent(state.token);
+  var res;
+  try {
+    res = await fetch(url, { method: method || "GET", cache: "no-store", credentials: "omit" });
+  } catch (e) {
+    throw new ApiError("network", "Couldn't reach Discogs. Check your connection. If you're online, your browser may be blocking requests from this page.");
+  }
+  if (res.status === 429) {
+    await rateWait();
+    return api(path, method);
+  }
+  if (res.status === 401 || res.status === 403) throw new ApiError("auth", "Discogs didn't accept the token. Paste a fresh one in Discogs connection.", res.status);
+  var body = null;
+  try { body = await res.json(); } catch (e) { body = null; }
+  if (!res.ok) throw new ApiError("http", (body && body.message) || ("Discogs returned error " + res.status), res.status);
+  var remaining = Number(res.headers.get("X-Discogs-Ratelimit-Remaining"));
+  if (!isNaN(remaining) && res.headers.get("X-Discogs-Ratelimit-Remaining") !== null && remaining <= 1) await rateWait();
+  return body;
+}
+
+async function rateWait() {
+  for (var s = 60; s > 0; s--) {
+    if (run.stop) return;
+    el.progressText.textContent = "Discogs asked for a breather. Resuming in " + s + "s…";
+    await sleep(1000);
+  }
+}
+
+function setConn(kind, text) {
+  el.connPill.className = "conn" + (kind ? " " + kind : "");
+  el.connPill.textContent = text;
+}
+function setBanner(msg) {
+  el.netBanner.textContent = msg;
+  el.netBanner.hidden = !msg;
+}
+
+async function connect() {
+  var t = el.token.value.trim();
+  if (!t) { setConn("bad", "No token"); el.token.focus(); return false; }
+  state.token = t;
+  setConn("", "Checking…");
+  try {
+    lastCall = 0;
+    var who = await api("/oauth/identity");
+    state.username = who.username;
+    setConn("ok", "Connected as " + who.username);
+    setBanner("");
+    el.connDrawer.open = false;
+    mood("happy", "Hi " + who.username + "! Let's dig.", 1000);
+    save();
+    return true;
+  } catch (e) {
+    state.username = "";
+    setConn("bad", e.kind === "auth" ? "Token rejected" : "Can't reach Discogs");
+    setBanner(e.message);
+    mood("sad", "That didn't connect.");
+    return false;
+  }
+}
+$("connect-btn").addEventListener("click", connect);
+$("show-token").addEventListener("click", function () {
+  var show = el.token.type === "password";
+  el.token.type = show ? "text" : "password";
+  this.setAttribute("aria-pressed", String(show));
+  this.textContent = show ? "Hide token" : "Show token";
+});
+$("remember-token").addEventListener("change", function () { state.settings.remember = this.checked; save(); });
+$("opt-vinyl").addEventListener("change", function () { state.settings.vinyl = this.checked; save(); });
+$("opt-owned").addEventListener("change", function () { state.settings.owned = this.checked; save(); });
+$("opt-sound").addEventListener("change", function () { state.settings.sound = this.checked; save(); });
+
+function toCandidate(r) {
+  var st = splitTitle(r.title);
+  return {
+    id: r.id, artist: st.artist, title: st.title, year: r.year || "", country: r.country || "",
+    format: (r.format || []).join(", "), label: (r.label || [])[0] || "", catno: r.catno || "",
+    thumb: r.thumb || "", url: r.uri ? "https://www.discogs.com" + r.uri : "https://www.discogs.com/release/" + r.id,
+    vinyl: (r.format || []).indexOf("Vinyl") > -1
+  };
+}
+
+async function searchItem(it) {
+  var queries = [];
+  if (it.kind === "barcode") searchVariants(it.value).forEach(function (v) { queries.push("barcode=" + encodeURIComponent(v)); });
+  else if (it.kind === "catno") queries.push("catno=" + encodeURIComponent(it.value));
+  else queries.push("q=" + encodeURIComponent(it.value));
+  var seen = {}, found = [];
+  for (var i = 0; i < queries.length; i++) {
+    var body = await api("/database/search?type=release&per_page=50&" + queries[i]);
+    (body.results || []).forEach(function (r) { if (!seen[r.id]) { seen[r.id] = 1; found.push(toCandidate(r)); } });
+    if (found.length) break;
+  }
+  var list = found;
+  if (state.settings.vinyl) {
+    var vinyl = found.filter(function (c) { return c.vinyl; });
+    if (vinyl.length) list = vinyl;
+  }
+  it.candidates = list.slice(0, 25);
+  it.note = "";
+  if (!list.length) { it.status = "notfound"; it.chosen = null; }
+  else if (list.length === 1) { it.status = "ready"; it.chosen = list[0].id; }
+  else { it.status = "multiple"; it.chosen = null; }
+}
+
+/* =================== Runs (match / add) =================== */
+var run = { active: false, stop: false };
+
+function setRunning(on, label) {
+  run.active = on;
+  el.matchBtn.disabled = on;
+  el.addBtn.disabled = on || readyItems().length === 0;
+  el.pauseBtn.hidden = !on;
+  if (label) el.progressText.textContent = label;
+}
+
+function setProgress(done, total) {
+  var pct = total ? Math.round(done / total * 100) : 0;
+  el.progressBar.style.width = pct + "%";
+  el.progress.setAttribute("aria-valuenow", String(pct));
+}
+
+async function ensureConnected() {
+  if (state.username && state.token) return true;
+  el.connDrawer.open = true;
+  if (el.token.value.trim()) return connect();
+  setBanner("Add your Discogs token in Discogs connection to start matching.");
+  el.token.focus();
+  return false;
+}
+
+async function matchAll() {
+  if (run.active) return;
+  if (!(await ensureConnected())) return;
+  var todo = state.items.filter(function (it) { return it.status === "queued" || it.status === "error"; });
+  if (!todo.length) { el.progressText.textContent = "Everything has been looked up already."; return; }
+  run.stop = false;
+  setRunning(true);
+  mood("think", "Digging through Discogs…");
+  var done = 0;
+  for (var i = 0; i < todo.length; i++) {
+    if (run.stop) break;
+    var it = todo[i];
+    it.status = "searching";
+    renderRecords();
+    var left = todo.length - i;
+    el.progressText.textContent = "Looking up " + (i + 1) + " of " + todo.length + ". About " + etaText(left * (it.kind === "barcode" ? 1.3 : 1.1)) + " left.";
+    try { await searchItem(it); }
+    catch (e) {
+      it.status = "error"; it.note = e.message;
+      if (e.kind === "network" || e.kind === "auth") { setBanner(e.message); run.stop = true; }
+    }
+    done++;
+    setProgress(done, todo.length);
+    save(); renderRecords(); renderCounts();
+  }
+  setRunning(false);
+  var c = counts();
+  if (run.stop && done < todo.length) {
+    el.progressText.textContent = "Paused after " + done + ". Tap Find matches to continue.";
+    mood("", "Paused. I'll wait.");
+  } else {
+    el.progressText.textContent = "Done. " + c.ready + " ready, " + c.multiple + " need a pick, " + c.notfound + " not found.";
+    mood(c.multiple + c.notfound ? "" : "happy", c.multiple + c.notfound
+      ? "Done digging. " + (c.multiple ? c.multiple + " need your pick. " : "") + (c.notfound ? c.notfound + " I couldn't find." : "")
+      : "Every single one matched!", 1200);
+    announce(el.progressText.textContent);
+    if (c.multiple) setFilter("multiple");
+    else if (c.notfound) setFilter("notfound");
+  }
+  renderAll();
+}
+
+function etaText(sec) {
+  sec = Math.ceil(sec);
+  if (sec < 60) return sec + " sec";
+  return Math.ceil(sec / 60) + " min";
+}
+
+function readyItems() {
+  return state.items.filter(function (it) { return (it.status === "ready" || it.status === "multiple") && it.chosen; });
+}
+
+async function addAll() {
+  if (run.active) return;
+  if (!(await ensureConnected())) return;
+  var todo = readyItems();
+  if (!todo.length) return;
+  run.stop = false;
+  setRunning(true);
+  mood("think", "Filing these into your collection…");
+  var done = 0, added = 0, owned = 0, failed = 0;
+  var user = encodeURIComponent(state.username);
+  for (var i = 0; i < todo.length; i++) {
+    if (run.stop) break;
+    var it = todo[i];
+    var prev = it.status;
+    it.status = "adding"; renderRecords();
+    el.progressText.textContent = "Adding " + (i + 1) + " of " + todo.length + "…";
+    try {
+      var already = 0;
+      if (state.settings.owned) {
+        try {
+          var have = await api("/users/" + user + "/collection/releases/" + it.chosen);
+          already = (have.releases || []).length;
+        } catch (e) { if (e.status !== 404) throw e; }
+      }
+      var toAdd = Math.max(0, it.qty - already);
+      for (var q = 0; q < toAdd; q++) await api("/users/" + user + "/collection/folders/1/releases/" + it.chosen, "POST");
+      if (toAdd === 0) { it.status = "owned"; owned++; }
+      else { it.status = "added"; added++; }
+      it.note = "";
+    } catch (e) {
+      it.status = prev; it.note = e.message; failed++;
+      if (e.kind === "network" || e.kind === "auth") { setBanner(e.message); run.stop = true; }
+    }
+    done++;
+    setProgress(done, todo.length);
+    save(); renderRecords(); renderCounts();
+  }
+  setRunning(false);
+  el.progressText.textContent = "Added " + added + "." + (owned ? " " + owned + (owned === 1 ? " was" : " were") + " already in your collection." : "") + (failed ? " " + failed + " failed. Tap Add again to retry." : "");
+  announce(el.progressText.textContent);
+  mood(added ? "happy" : "", added ? added + " records filed. Beautiful." : "Nothing new to add.", 1400);
+  renderAll();
+}
+
+el.matchBtn.addEventListener("click", matchAll);
+el.addBtn.addEventListener("click", addAll);
+el.pauseBtn.addEventListener("click", function () { run.stop = true; el.progressText.textContent = "Pausing after this one…"; });
+
+/* =================== Match view rendering =================== */
+var filter = "all";
+var expanded = {};
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll(".chip-btn").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.filter === f)); });
+  renderRecords();
+}
+document.querySelector(".filters").addEventListener("click", function (e) {
+  var b = e.target.closest(".chip-btn"); if (b) setFilter(b.dataset.filter);
+});
+
+function counts() {
+  var c = { queued: 0, ready: 0, multiple: 0, notfound: 0, error: 0, done: 0 };
+  state.items.forEach(function (it) {
+    if (it.status === "added" || it.status === "owned") c.done++;
+    else if (it.status === "multiple") { c.multiple++; }
+    else if (c[it.status] !== undefined) c[it.status]++;
+    else c.queued++;
+  });
+  return c;
+}
+
+var STATUS = {
+  queued: ["Waiting", "•"], searching: ["Looking up", "…"], ready: ["Matched", "✓"], multiple: ["Pick one", "?"],
+  notfound: ["Not found", "✕"], error: ["Error", "!"], adding: ["Adding", "…"], added: ["In collection", "★"], owned: ["Already owned", "★"]
+};
+
+function passes(it) {
+  if (filter === "all") return true;
+  if (filter === "done") return it.status === "added" || it.status === "owned";
+  if (filter === "notfound") return it.status === "notfound" || it.status === "error";
+  if (filter === "queued") return it.status === "queued" || it.status === "searching";
+  return it.status === filter;
+}
+
+function releaseBlock(c) {
+  var sub = [c.year, c.country, c.label, c.catno].filter(Boolean).join(" · ");
+  return '<div class="release">' +
+    (c.thumb ? '<img src="' + esc(c.thumb) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<div class="noart" aria-hidden="true"></div>') +
+    '<div class="meta"><div class="artist">' + esc(c.artist || "Unknown artist") + '</div><div class="title">' + esc(c.title) + "</div>" +
+    '<div class="sub">' + esc(sub) + "</div>" + (c.format ? '<div class="sub">' + esc(c.format) + "</div>" : "") +
+    '<a href="' + esc(c.url) + '" target="_blank" rel="noopener">View on Discogs<span class="sr-only"> (opens new tab)</span></a></div></div>';
+}
+
+function renderRecords() {
+  var list = state.items.filter(passes).slice().reverse();
+  el.recordsEmpty.hidden = list.length > 0;
+  el.recordsEmpty.textContent = state.items.length ? "Nothing in this view." : "Your crate is empty. Scan some records first.";
+  var focusId = document.activeElement && document.activeElement.id;
+  el.records.innerHTML = list.map(function (it) {
+    var s = STATUS[it.status] || STATUS.queued;
+    var html = '<li class="rec s-' + it.status + '" data-id="' + it.id + '">' +
+      '<div class="rec-head"><span class="code">' + esc(itemLabel(it)) + (it.qty > 1 ? " ×" + it.qty : "") + "</span>" +
+      '<span class="status ' + it.status + '"><span aria-hidden="true">' + s[1] + "</span>" + s[0] + "</span></div>";
+    var chosen = it.candidates.find(function (c) { return c.id === it.chosen; });
+    if ((it.status === "ready" || it.status === "added" || it.status === "owned" || it.status === "adding") && chosen) {
+      html += releaseBlock(chosen);
+    }
+    if (it.status === "multiple") {
+      var show = expanded[it.id] ? it.candidates : it.candidates.slice(0, 5);
+      html += '<fieldset class="picks"><legend>' + it.candidates.length + " pressings share this " + (it.kind === "barcode" ? "barcode" : "search") + ". Which is yours?</legend>" +
+        show.map(function (c) {
+          var rid = "pick-" + it.id + "-" + c.id;
+          return '<label class="pick" for="' + rid + '"><input type="radio" id="' + rid + '" name="pick-' + it.id + '" value="' + c.id + '"' + (it.chosen === c.id ? " checked" : "") + ">" + releaseBlock(c) + "</label>";
+        }).join("") + "</fieldset>" +
+        (it.candidates.length > 5 && !expanded[it.id] ? '<button class="btn small ghost more-picks" type="button" data-act="more">Show all ' + it.candidates.length + "</button>" : "");
+    }
+    if (it.status === "notfound" || it.status === "error") {
+      html += '<p class="hint">' + esc(it.note || "Discogs has no match for this. Try the catalog number from the spine, or artist and title.") + "</p>" +
+        '<form class="retry" data-act="retry"><div class="row">' +
+        '<label class="sr-only" for="rk-' + it.id + '">Search by</label>' +
+        '<select class="input" id="rk-' + it.id + '"><option value="catno">Cat #</option><option value="query">Artist + title</option><option value="barcode">Barcode</option></select>' +
+        '<label class="sr-only" for="rv-' + it.id + '">Search for</label>' +
+        '<input class="input" id="rv-' + it.id + '" autocomplete="off" placeholder="Try again"></div>' +
+        '<button class="btn small cool" type="submit">Search again</button></form>';
+    }
+    if (it.note && (it.status === "ready" || it.status === "multiple")) html += '<p class="hint">' + esc(it.note) + "</p>";
+    if (it.status !== "added" && it.status !== "owned") {
+      html += '<div class="row"><button class="btn small ghost" type="button" data-act="remove">Remove</button>' +
+        (it.status === "ready" && it.candidates.length > 1 ? '<button class="btn small ghost" type="button" data-act="repick">Pick a different pressing</button>' : "") + "</div>";
+    }
+    return html + "</li>";
+  }).join("");
+  if (focusId) { var f = document.getElementById(focusId); if (f) f.focus(); }
+  updateAddBtn();
+}
+
+function updateAddBtn() {
+  var n = readyItems().length;
+  el.addBtn.textContent = "Add " + n + " to my collection";
+  el.addBtn.disabled = run.active || n === 0;
+  var c = counts(), total = state.items.length;
+  el.matchSummary.textContent = total
+    ? total + " in the crate · " + c.queued + " waiting · " + (c.ready) + " matched · " + c.multiple + " to pick · " + c.notfound + " not found · " + c.done + " done"
+    : "Scan some records first.";
+}
+
+el.records.addEventListener("change", function (e) {
+  if (e.target.type !== "radio") return;
+  var it = state.items.find(function (x) { return x.id === Number(e.target.closest(".rec").dataset.id); });
+  if (!it) return;
+  it.chosen = Number(e.target.value);
+  save(); updateAddBtn(); renderCounts();
+});
+el.records.addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-act]"); if (!b) return;
+  var li = b.closest(".rec"), id = Number(li.dataset.id);
+  var it = state.items.find(function (x) { return x.id === id; });
+  if (!it) return;
+  if (b.dataset.act === "more") { expanded[id] = true; renderRecords(); return; }
+  if (b.dataset.act === "repick") { it.status = "multiple"; save(); renderRecords(); return; }
+  if (b.dataset.act === "remove") itemAction(id, "remove");
+});
+el.records.addEventListener("submit", async function (e) {
+  e.preventDefault();
+  var li = e.target.closest(".rec"), id = Number(li.dataset.id);
+  var it = state.items.find(function (x) { return x.id === id; });
+  if (!it || run.active) return;
+  var kind = $("rk-" + id).value, val = $("rv-" + id).value.trim();
+  if (!val) { $("rv-" + id).focus(); return; }
+  if (!(await ensureConnected())) return;
+  if (kind === "barcode") { val = canonical(val); }
+  var original = { kind: it.kind, value: it.value };
+  it.kind = kind; it.value = val; it.status = "searching";
+  renderRecords();
+  run.active = true;
+  try { await searchItem(it); }
+  catch (err) { it.status = "error"; it.note = err.message; }
+  run.active = false;
+  if (it.status === "notfound") { it.note = "No match for " + val + " either."; it.kind = original.kind; it.value = original.value; }
+  save(); renderAll();
+  announce(STATUS[it.status][0]);
+});
+
+/* =================== Save / export =================== */
+function download(name, text, type) {
+  var blob = new Blob([text], { type: type });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = name; a.rel = "noopener";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+}
+function stamp() { return new Date().toISOString().slice(0, 10); }
+
+function buildCSV() {
+  var head = ["barcode_or_search", "search_type", "copies", "status", "release_id", "artist", "title", "year", "country", "label", "catno", "format", "discogs_url", "scanned_at"];
+  var rows = state.items.map(function (it) {
+    var c = it.candidates.find(function (x) { return x.id === it.chosen; }) || {};
+    return [it.value, it.kind, it.qty, (STATUS[it.status] || STATUS.queued)[0], c.id || "", c.artist || "", c.title || "", c.year || "", c.country || "", c.label || "", c.catno || "", c.format || "", c.url || "", it.scannedAt];
+  });
+  return "﻿" + [head].concat(rows).map(function (r) { return r.map(csvCell).join(","); }).join("\r\n") + "\r\n";
+}
+window.__crateTest.buildCSV = function (items) { var keep = state.items; state.items = items; var out = buildCSV(); state.items = keep; return out; };
+
+function codeList() {
+  return state.items.filter(function (it) { return it.kind === "barcode"; }).map(function (it) { return it.value; }).join("\n");
+}
+
+$("dl-csv").addEventListener("click", function () {
+  if (!state.items.length) { $("save-msg").textContent = "The crate is empty."; return; }
+  download("crate-digger-" + stamp() + ".csv", buildCSV(), "text/csv;charset=utf-8");
+  $("save-msg").textContent = "Spreadsheet downloaded. Check your Downloads or Files app.";
+  mood("happy", "Backed up. Smart.", 800);
+});
+$("dl-txt").addEventListener("click", function () {
+  var t = codeList();
+  if (!t) { $("save-msg").textContent = "No barcodes yet."; return; }
+  download("crate-barcodes-" + stamp() + ".txt", t + "\n", "text/plain;charset=utf-8");
+  $("save-msg").textContent = "Barcode list downloaded.";
+});
+$("copy-codes").addEventListener("click", async function () {
+  var t = codeList(), msg = $("save-msg");
+  if (!t) { msg.textContent = "No barcodes yet."; return; }
+  try { await navigator.clipboard.writeText(t); msg.textContent = "Copied " + t.split("\n").length + " barcodes."; }
+  catch (e) {
+    var ta = $("paste-input"); ta.value = t;
+    msg.textContent = "Your browser blocked copying. The list is in Paste a list on the Scan tab, ready to select.";
+  }
+});
+$("clear-btn").addEventListener("click", function () {
+  $("clear-n").textContent = state.items.length;
+  $("clear-confirm").hidden = false; this.hidden = true; $("clear-no").focus();
+});
+$("clear-no").addEventListener("click", function () { $("clear-confirm").hidden = true; $("clear-btn").hidden = false; $("clear-btn").focus(); });
+$("clear-yes").addEventListener("click", function () {
+  state.items = []; recent.clear(); save();
+  $("clear-confirm").hidden = true; $("clear-btn").hidden = false;
+  $("save-msg").textContent = "Crate cleared.";
+  mood("", "Fresh crate. Let's go.");
+  renderAll();
+});
+
+/* =================== Tabs =================== */
+var tabs = ["scan", "match", "save"];
+function showTab(name, focus) {
+  tabs.forEach(function (t) {
+    var on = t === name;
+    $("tab-" + t).setAttribute("aria-selected", String(on));
+    $("tab-" + t).tabIndex = on ? 0 : -1;
+    $("panel-" + t).hidden = !on;
+  });
+  if (name !== "scan" && scan.on) stopScan();
+  if (name === "match") renderRecords();
+  if (focus) $("tab-" + name).focus();
+}
+document.querySelector(".tabs").addEventListener("click", function (e) {
+  var b = e.target.closest(".tab"); if (b) showTab(b.id.replace("tab-", ""));
+});
+document.querySelector(".tabs").addEventListener("keydown", function (e) {
+  var i = tabs.indexOf(document.activeElement.id.replace("tab-", ""));
+  if (i < 0) return;
+  if (e.key === "ArrowRight") { e.preventDefault(); showTab(tabs[(i + 1) % 3], true); }
+  if (e.key === "ArrowLeft") { e.preventDefault(); showTab(tabs[(i + 2) % 3], true); }
+});
+
+function renderCounts() {
+  var c = counts();
+  el.cScan.textContent = state.items.length;
+  el.cMatch.textContent = c.multiple + c.notfound + c.ready + c.queued;
+  el.tally.textContent = state.items.length;
+}
+function renderAll() { renderScan(); renderCounts(); renderRecords(); }
+
+/* =================== Boot =================== */
+load();
+$("remember-token").checked = !!state.settings.remember;
+$("opt-vinyl").checked = state.settings.vinyl;
+$("opt-owned").checked = state.settings.owned;
+$("opt-sound").checked = state.settings.sound;
+if (state.token) {
+  el.token.value = state.token;
+  if (state.username) setConn("ok", "Connected as " + state.username);
+  mood("", state.items.length ? "Welcome back. " + state.items.length + " records in the crate." : "Ready when you are.");
+} else {
+  el.connDrawer.open = true;
+  state.username = "";
+}
+if (!window.isSecureContext) {
+  setBanner("The camera only works when this page is opened from an https:// address. Host it (see instructions) or use Paste a list.");
+}
+renderAll();
+})();
+</script>
+</body>
+</html>
